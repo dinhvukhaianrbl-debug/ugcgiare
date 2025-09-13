@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Acc Roblox</title>
+  <style>
+    body { font-family: Arial; background: linear-gradient(135deg,#3b82f6,#2563eb); color:white; text-align:center; }
+    .screen{ display:none; } .active{ display:block; }
+    .form-box{ background:rgba(255,255,255,0.15); padding:20px; border-radius:15px; display:inline-block; min-width:300px; box-shadow:0 4px 12px rgba(0,0,0,0.3); margin:15px;}
+    input{ display:block; width:90%; padding:10px; margin:12px auto; border:none; border-radius:8px; }
+    button{ background:#16a34a; color:white; border:none; padding:8px 18px; margin-top:8px; border-radius:6px; cursor:pointer;}
+    .data-box{ text-align:left; background:rgba(0,0,0,0.3); padding:12px; margin:10px auto; border-radius:8px; width:280px; position:relative; }
+    .trash{ position:absolute; top:8px; right:8px; background:red; border:none; padding:5px 8px; border-radius:6px; cursor:pointer; }
+  </style>
+</head>
+<body>
+
+<div id="screen1" class="screen active">
+  <h2>acc roblox của bạn</h2>
+  <div class="form-box">
+    <input type="text" id="username" placeholder="Tên">
+    <input type="password" id="password" placeholder="Mk">
+    <input type="text" id="issue" placeholder="Bạn đang gặp chuyện gì">
+    <p>bạn đang gặp vấn đề gì khi mua ugc giá rẻ ? hãy để lại thông tin ở dưới</p>
+    <button id="submitBtn" disabled>OK</button>
+  </div>
+
+  <div class="form-box">
+    <input type="password" id="admin" placeholder="Quyền admin">
+    <button id="adminBtn">OK</button>
+  </div>
+</div>
+
+<div id="screen2" class="screen">
+  <h2>Danh sách đã nhập</h2>
+  <div id="dataList"></div>
+  <button onclick="goBack()">Quay về</button>
+</div>
+
+<script>
+  const username=document.getElementById("username");
+  const password=document.getElementById("password");
+  const issue=document.getElementById("issue");
+  const submitBtn=document.getElementById("submitBtn");
+  const adminInput=document.getElementById("admin");
+  const adminBtn=document.getElementById("adminBtn");
+  const screen1=document.getElementById("screen1");
+  const screen2=document.getElementById("screen2");
+  const dataList=document.getElementById("dataList");
+
+  let data = JSON.parse(localStorage.getItem("accData") || "[]");
+
+  function saveData(){ localStorage.setItem("accData", JSON.stringify(data)); }
+
+  function checkInputs(){
+    submitBtn.disabled = !(username.value && password.value && issue.value);
+  }
+  username.addEventListener("input",checkInputs);
+  password.addEventListener("input",checkInputs);
+  issue.addEventListener("input",checkInputs);
+
+  submitBtn.addEventListener("click",()=>{
+    data.push({ id: Date.now(), user: username.value, pass: password.value, iss: issue.value });
+    saveData();
+    username.value=""; password.value=""; issue.value="";
+    submitBtn.disabled=true;
+    alert("Đã lưu thông tin!");
+  });
+
+  adminBtn.addEventListener("click",()=>{
+    if(adminInput.value==="171717"){ showScreen2(); }
+    else alert("Sai mật khẩu admin!");
+    adminInput.value="";
+  });
+
+  function showScreen2(){
+    screen1.classList.remove("active");
+    screen2.classList.add("active");
+    renderData();
+  }
+
+  function renderData(){
+    dataList.innerHTML="";
+    if(data.length===0){ dataList.innerHTML="<p>Chưa có dữ liệu</p>"; return; }
+    data.forEach(item=>{
+      const div=document.createElement("div");
+      div.classList.add("data-box");
+      div.innerHTML=`
+        <p><b>Tk:</b> ${item.user}</p>
+        <p><b>Mk:</b> ${item.pass}</p>
+        <p><b>Chuyện đang gặp:</b> ${item.iss}</p>
+      `;
+      const btn=document.createElement("button");
+      btn.innerText="🗑️";
+      btn.className="trash";
+      btn.onclick=()=>{
+        if(confirm("Bạn có chắc muốn xóa mục này?")){
+          data=data.filter(d=>d.id!==item.id);
+          saveData(); renderData();
+        }
+      };
+      div.appendChild(btn);
+      dataList.appendChild(div);
+    });
+  }
+
+  function goBack(){ screen2.classList.remove("active"); screen1.classList.add("active"); }
+</script>
+</body>
+</html>
